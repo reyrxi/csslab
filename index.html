@@ -3,361 +3,185 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CSSLab — Editor ao Vivo</title>
+<title>CSSLab v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;500;700&family=Unbounded:wght@400;700;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 :root {
-  --bg: #0c0c0e;
-  --surface: #111114;
-  --surface2: #18181d;
-  --border: #222228;
-  --border2: #2e2e38;
-  --accent: #e8ff47;
-  --accent2: #47d4ff;
-  --text: #f0f0f5;
-  --muted: #666672;
-  --tab-h: 42px;
-  --header-h: 56px;
+  --bg: #f5f0e8;
+  --surface: #ede8df;
+  --surface2: #e4ddd2;
+  --ink: #1a1208;
+  --ink2: #3d3020;
+  --muted: #8a7d6b;
+  --border: #d4cbbe;
+  --border2: #c4b8a8;
+  --accent: #d63a1f;
+  --header-h: 52px;
+  --tab-h: 40px;
+  --status-h: 28px;
 }
+html, body { height: 100%; overflow: hidden; }
+body { background: var(--bg); color: var(--ink); font-family: 'Martian Mono', monospace; display: flex; flex-direction: column; }
+body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.025; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Instrument Sans', sans-serif;
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
+/* HEADER */
+header { height: var(--header-h); display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; border-bottom: 2px solid var(--ink); background: var(--bg); flex-shrink: 0; gap: 0.75rem; position: relative; z-index: 10; }
+.logo { display: flex; align-items: baseline; gap: 0.25rem; font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 1.05rem; letter-spacing: -0.04em; flex-shrink: 0; }
+.logo-accent { color: var(--accent); }
+.logo-v { font-size: 0.6rem; font-weight: 700; color: var(--muted); vertical-align: super; margin-left: 1px; }
+.header-center { display: flex; align-items: center; gap: 0.5rem; flex: 1; justify-content: center; }
+.header-right { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
+.divider { width: 1px; height: 20px; background: var(--border2); }
 
-/* ── HEADER ── */
-header {
-  height: var(--header-h);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1.25rem;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  gap: 1rem;
-}
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; gap: 0.35rem; font-family: 'Martian Mono', monospace; font-size: 0.68rem; font-weight: 500; padding: 0.35rem 0.7rem; border-radius: 3px; cursor: pointer; transition: all 0.1s; border: 1.5px solid var(--border2); background: var(--surface); color: var(--ink2); white-space: nowrap; line-height: 1; }
+.btn:hover { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700; }
+.btn-accent:hover { background: #b52e15; border-color: #b52e15; color: #fff; }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--muted); }
+.btn-ghost:hover { background: var(--surface2); color: var(--ink); border-color: var(--border); }
+.icon-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 3px; cursor: pointer; border: 1.5px solid transparent; background: transparent; color: var(--muted); transition: all 0.1s; flex-shrink: 0; }
+.icon-btn:hover { background: var(--surface2); color: var(--ink); border-color: var(--border); }
+.icon-btn.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: 'Geist Mono', monospace;
-  font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: -0.02em;
-}
+/* WORKSPACE */
+.workspace { flex: 1; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; min-height: 0; }
 
-.logo-dot {
-  width: 8px; height: 8px;
-  background: var(--accent);
-  border-radius: 50%;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%,100% { opacity:1; transform:scale(1); }
-  50% { opacity:0.5; transform:scale(0.8); }
-}
-
-.logo span { color: var(--accent); }
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* Templates dropdown */
-.templates-wrap { position: relative; }
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-family: 'Instrument Sans', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 0.4rem 0.75rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-  border: 1px solid var(--border2);
-  background: var(--surface2);
-  color: var(--text);
-  white-space: nowrap;
-}
-
-.btn:hover { border-color: var(--accent); color: var(--accent); }
-
-.btn-primary {
-  background: var(--accent);
-  color: #000;
-  border-color: var(--accent);
-  font-weight: 700;
-}
-.btn-primary:hover { background: #d4e83d; color: #000; border-color: #d4e83d; }
-
-.dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  min-width: 200px;
-  z-index: 100;
-  overflow: hidden;
-  display: none;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-}
-
-.dropdown.open { display: block; }
-
-.dropdown-item {
-  display: flex;
-  flex-direction: column;
-  padding: 0.6rem 0.9rem;
-  cursor: pointer;
-  transition: background 0.1s;
-  border-bottom: 1px solid var(--border);
-}
-.dropdown-item:last-child { border-bottom: none; }
-.dropdown-item:hover { background: var(--surface); }
-.dropdown-item strong { font-size: 0.8rem; font-weight: 600; }
-.dropdown-item small { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
-
-/* ── LAYOUT ── */
-.workspace {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  overflow: hidden;
-}
-
-/* ── PANELS ── */
-.panel {
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--border);
-  overflow: hidden;
-}
-
+/* PANEL */
+.panel { display: flex; flex-direction: column; border-right: 2px solid var(--ink); overflow: hidden; min-height: 0; }
 .panel:last-child { border-right: none; }
+.panel-header { height: var(--tab-h); display: flex; align-items: center; justify-content: space-between; padding: 0 0.75rem; border-bottom: 1.5px solid var(--border); background: var(--surface); flex-shrink: 0; gap: 0.5rem; }
+.tabs { display: flex; gap: 2px; }
+.tab { font-family: 'Martian Mono', monospace; font-size: 0.65rem; font-weight: 500; padding: 0.25rem 0.6rem; border-radius: 2px; cursor: pointer; color: var(--muted); transition: all 0.1s; border: 1.5px solid transparent; text-transform: uppercase; letter-spacing: 0.05em; }
+.tab.active { color: var(--ink); background: var(--bg); border-color: var(--border2); font-weight: 700; }
+.tab:not(.active):hover { color: var(--ink2); background: var(--surface2); }
+.panel-actions { display: flex; align-items: center; gap: 3px; }
 
-.panel-header {
-  height: var(--tab-h);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  flex-shrink: 0;
-  gap: 0.5rem;
-}
+/* EDITOR */
+.editor-wrap { flex: 1; overflow: hidden; position: relative; min-height: 0; }
+.editor-pane { position: absolute; inset: 0; display: none; flex-direction: column; }
+.editor-pane.active { display: flex; }
+.CodeMirror { flex: 1; height: 100% !important; font-family: 'Martian Mono', monospace !important; font-size: 0.78rem !important; line-height: 1.7 !important; background: #1c1812 !important; color: #e8dfc8 !important; border: none !important; }
+.CodeMirror-scroll { height: 100% !important; }
+.CodeMirror-cursor { border-left-color: var(--accent) !important; }
+.CodeMirror-selected { background: rgba(214,58,31,0.2) !important; }
+.CodeMirror-gutters { background: #161310 !important; border-right: 1px solid #2a2420 !important; }
+.CodeMirror-linenumber { color: #4a4038 !important; }
 
-.tabs {
-  display: flex;
-  gap: 2px;
-}
+/* PREVIEW */
+.preview-wrap { flex: 1; overflow: hidden; background: #fff; position: relative; display: flex; flex-direction: column; align-items: center; min-height: 0; }
+.preview-wrap.tablet, .preview-wrap.mobile { background: var(--surface2); }
+iframe { width: 100%; height: 100%; border: none; }
+.preview-wrap.tablet iframe { width: 768px; max-width: 100%; border-left: 1.5px solid var(--border2); border-right: 1.5px solid var(--border2); }
+.preview-wrap.mobile iframe { width: 390px; max-width: 100%; border-left: 1.5px solid var(--border2); border-right: 1.5px solid var(--border2); }
 
-.tab {
-  font-family: 'Geist Mono', monospace;
-  font-size: 0.72rem;
-  font-weight: 500;
-  padding: 0.3rem 0.7rem;
-  border-radius: 4px;
-  cursor: pointer;
-  color: var(--muted);
-  transition: all 0.15s;
-  border: 1px solid transparent;
-}
+/* STATUSBAR */
+.statusbar { height: var(--status-h); display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; border-top: 2px solid var(--ink); background: var(--ink); color: var(--bg); flex-shrink: 0; font-size: 0.62rem; font-family: 'Martian Mono', monospace; }
+.status-left, .status-right { display: flex; align-items: center; gap: 0.75rem; }
+.status-muted { color: rgba(245,240,232,0.4); }
 
-.tab.active {
-  color: var(--accent);
-  background: rgba(232,255,71,0.08);
-  border-color: rgba(232,255,71,0.2);
-}
+/* DROPDOWN */
+.dropdown-wrap { position: relative; }
+.dropdown { position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg); border: 2px solid var(--ink); border-radius: 4px; min-width: 190px; z-index: 200; overflow: hidden; display: none; box-shadow: 4px 4px 0 var(--ink); }
+.dropdown.open { display: block; }
+.dropdown-section { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); padding: 0.5rem 0.75rem 0.25rem; }
+.dropdown-item { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0.75rem; cursor: pointer; transition: background 0.1s; font-size: 0.72rem; border-bottom: 1px solid var(--border); }
+.dropdown-item:last-child { border-bottom: none; }
+.dropdown-item:hover { background: var(--ink); color: var(--bg); }
+.badge { font-size: 0.58rem; padding: 0.1rem 0.35rem; border-radius: 2px; background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+.dropdown-item:hover .badge { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border-color: transparent; }
 
-.tab:not(.active):hover { color: var(--text); }
+/* HISTORY */
+.history-panel { position: fixed; top: var(--header-h); right: 0; bottom: var(--status-h); width: 270px; background: var(--bg); border-left: 2px solid var(--ink); z-index: 100; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.2s cubic-bezier(0.4,0,0.2,1); box-shadow: -4px 0 0 var(--ink); }
+.history-panel.open { transform: translateX(0); }
+.history-header { padding: 0.75rem 1rem; border-bottom: 1.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.history-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+.history-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
+.history-item { padding: 0.6rem 0.75rem; border-radius: 3px; border: 1.5px solid var(--border); margin-bottom: 0.4rem; cursor: pointer; transition: all 0.1s; background: var(--surface); }
+.history-item:hover { border-color: var(--ink); }
+.history-item.current { border-color: var(--accent); }
+.history-time { font-size: 0.6rem; color: var(--muted); margin-bottom: 0.2rem; }
+.history-preview { font-size: 0.65rem; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-empty { text-align: center; color: var(--muted); font-size: 0.68rem; padding: 2rem 1rem; line-height: 1.8; }
 
-.panel-actions {
-  display: flex;
-  gap: 0.4rem;
-}
+/* TOAST */
+.toast { position: fixed; bottom: calc(var(--status-h) + 12px); left: 50%; transform: translateX(-50%) translateY(16px); background: var(--ink); color: var(--bg); font-size: 0.7rem; padding: 0.45rem 1rem; border-radius: 3px; opacity: 0; transition: all 0.2s; pointer-events: none; z-index: 500; white-space: nowrap; box-shadow: 3px 3px 0 var(--accent); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-.icon-btn {
-  width: 28px; height: 28px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 5px;
-  cursor: pointer;
-  border: 1px solid var(--border2);
-  background: transparent;
-  color: var(--muted);
-  transition: all 0.15s;
-  font-size: 0.8rem;
-}
-.icon-btn:hover { color: var(--accent); border-color: var(--accent); }
-.icon-btn.copied { color: #4ade80; border-color: #4ade80; }
-
-/* ── EDITORS ── */
-.editor-wrap {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-
-.editor-pane {
-  position: absolute; inset: 0;
-  display: none;
-}
-.editor-pane.active { display: flex; flex-direction: column; }
-
-textarea {
-  flex: 1;
-  width: 100%;
-  background: var(--bg);
-  color: var(--text);
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: 'Geist Mono', monospace;
-  font-size: 0.8rem;
-  line-height: 1.7;
-  padding: 1rem 1.25rem;
-  tab-size: 2;
-  caret-color: var(--accent);
-}
-
-textarea::selection { background: rgba(232,255,71,0.15); }
-
-textarea::-webkit-scrollbar { width: 6px; }
-textarea::-webkit-scrollbar-track { background: transparent; }
-textarea::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-
-/* ── PREVIEW ── */
-.preview-wrap {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  background: #fff;
-}
-
-iframe {
-  width: 100%; height: 100%;
-  border: none;
-  background: #fff;
-}
-
-/* Viewport controls */
-.viewport-btns {
-  display: flex;
-  gap: 3px;
-}
-
-.vp-btn {
-  width: 26px; height: 26px;
-  border-radius: 4px;
-  border: 1px solid var(--border2);
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
-  font-size: 0.75rem;
-}
-.vp-btn.active, .vp-btn:hover { color: var(--accent); border-color: var(--accent); }
-
-/* preview size modes */
-.preview-wrap.tablet iframe { max-width: 768px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
-.preview-wrap.mobile iframe { max-width: 390px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
-
-/* ── STATUS BAR ── */
-.statusbar {
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1rem;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  flex-shrink: 0;
-  font-family: 'Geist Mono', monospace;
-  font-size: 0.65rem;
-  color: var(--muted);
-}
-
-.status-left, .status-right { display: flex; align-items: center; gap: 1rem; }
-.status-dot { width: 5px; height: 5px; border-radius: 50%; background: #4ade80; }
-
-/* ── RESPONSIVE ── */
+/* MOBILE */
 @media (max-width: 768px) {
   .workspace { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
-  .panel { border-right: none; border-bottom: 1px solid var(--border); }
+  .panel { border-right: none; border-bottom: 2px solid var(--ink); }
+  .panel:last-child { border-bottom: none; }
+  .header-center { display: none; }
+  .history-panel { width: 100%; }
+  .btn span { display: none; }
 }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">
-    <div class="logo-dot"></div>
-    CSS<span>Lab</span>
-  </div>
+  <div class="logo">CSS<span class="logo-accent">Lab</span><span class="logo-v">v2</span></div>
 
-  <div class="header-actions">
-    <div class="templates-wrap">
-      <button class="btn" onclick="toggleDropdown()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-        Templates
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+  <div class="header-center">
+    <div class="dropdown-wrap">
+      <button class="btn" onclick="toggleDropdown('dd-templates')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span>Templates</span>
       </button>
-      <div class="dropdown" id="dropdown">
-        <div class="dropdown-item" onclick="loadTemplate('blank')">
-          <strong>Em branco</strong>
-          <small>Começa do zero</small>
-        </div>
-        <div class="dropdown-item" onclick="loadTemplate('card')">
-          <strong>Card de Produto</strong>
-          <small>Card com imagem e botão</small>
-        </div>
-        <div class="dropdown-item" onclick="loadTemplate('hero')">
-          <strong>Hero Section</strong>
-          <small>Seção principal com CTA</small>
-        </div>
-        <div class="dropdown-item" onclick="loadTemplate('form')">
-          <strong>Formulário</strong>
-          <small>Form estilizado com Tailwind</small>
-        </div>
-        <div class="dropdown-item" onclick="loadTemplate('navbar')">
-          <strong>Navbar</strong>
-          <small>Barra de navegação responsiva</small>
-        </div>
-        <div class="dropdown-item" onclick="loadTemplate('grid')">
-          <strong>Grid de Cards</strong>
-          <small>Layout em grid responsivo</small>
-        </div>
+      <div class="dropdown" id="dd-templates">
+        <div class="dropdown-section">Componentes</div>
+        <div class="dropdown-item" onclick="loadTemplate('blank')">Em branco <span class="badge">base</span></div>
+        <div class="dropdown-item" onclick="loadTemplate('hero')">Hero Section <span class="badge">layout</span></div>
+        <div class="dropdown-item" onclick="loadTemplate('card')">Card de Produto <span class="badge">UI</span></div>
+        <div class="dropdown-item" onclick="loadTemplate('form')">Formulário <span class="badge">UI</span></div>
+        <div class="dropdown-item" onclick="loadTemplate('navbar')">Navbar <span class="badge">layout</span></div>
+        <div class="dropdown-item" onclick="loadTemplate('grid')">Grid de Cards <span class="badge">layout</span></div>
       </div>
     </div>
 
-    <button class="btn btn-primary" onclick="exportHTML()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <div class="divider"></div>
+
+    <div style="display:flex;gap:3px;">
+      <button class="icon-btn active" id="vp-desktop" title="Desktop" onclick="setViewport('desktop',this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      </button>
+      <button class="icon-btn" id="vp-tablet" title="Tablet" onclick="setViewport('tablet',this)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      </button>
+      <button class="icon-btn" id="vp-mobile" title="Mobile" onclick="setViewport('mobile',this)">
+        <svg width="11" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="shareURL()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      <span>Compartilhar</span>
+    </button>
+    <button class="btn btn-ghost" onclick="toggleHistory()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Histórico</span>
+    </button>
+    <button class="btn btn-accent" onclick="exportHTML()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Exportar
     </button>
   </div>
 </header>
 
 <div class="workspace">
-
-  <!-- EDITOR PANEL -->
   <div class="panel">
     <div class="panel-header">
       <div class="tabs">
@@ -365,45 +189,26 @@ iframe {
         <div class="tab" onclick="switchTab('css')" id="tab-css">CSS</div>
       </div>
       <div class="panel-actions">
-        <button class="icon-btn" title="Copiar código" onclick="copyCode(this)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <button class="icon-btn" title="Copiar código" onclick="copyCode()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         </button>
-        <button class="icon-btn" title="Formatar código" onclick="formatCode()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h14"/></svg>
+        <button class="icon-btn" title="Salvar snapshot" onclick="saveSnapshot()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         </button>
       </div>
     </div>
-
     <div class="editor-wrap">
-      <div class="editor-pane active" id="pane-html">
-        <textarea id="editor-html" spellcheck="false" placeholder="Digite seu HTML aqui..." oninput="scheduleUpdate()"></textarea>
-      </div>
-      <div class="editor-pane" id="pane-css">
-        <textarea id="editor-css" spellcheck="false" placeholder="Digite seu CSS aqui..." oninput="scheduleUpdate()"></textarea>
-      </div>
+      <div class="editor-pane active" id="pane-html"><textarea id="editor-html"></textarea></div>
+      <div class="editor-pane" id="pane-css"><textarea id="editor-css"></textarea></div>
     </div>
   </div>
 
-  <!-- PREVIEW PANEL -->
   <div class="panel">
     <div class="panel-header">
-      <div class="tabs">
-        <div class="tab active">Preview</div>
-      </div>
+      <div class="tabs"><div class="tab active">Preview</div></div>
       <div class="panel-actions">
-        <div class="viewport-btns">
-          <button class="vp-btn active" title="Desktop" onclick="setViewport('desktop', this)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-          </button>
-          <button class="vp-btn" title="Tablet" onclick="setViewport('tablet', this)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-          </button>
-          <button class="vp-btn" title="Mobile" onclick="setViewport('mobile', this)">
-            <svg width="11" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-          </button>
-        </div>
         <button class="icon-btn" title="Recarregar" onclick="updatePreview()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
         </button>
       </div>
     </div>
@@ -413,351 +218,184 @@ iframe {
   </div>
 </div>
 
+<div class="history-panel" id="history-panel">
+  <div class="history-header">
+    <span class="history-title">Histórico</span>
+    <button class="icon-btn" onclick="toggleHistory()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="history-list" id="history-list"></div>
+</div>
+
 <div class="statusbar">
   <div class="status-left">
-    <div class="status-dot"></div>
     <span id="status-text">Pronto</span>
+    <span class="status-muted">|</span>
+    <span id="char-count">0 chars</span>
   </div>
   <div class="status-right">
-    <span id="char-count">0 chars</span>
-    <span>Tailwind CDN ativo</span>
+    <span class="status-muted">Tailwind CDN</span>
+    <span class="status-muted">|</span>
+    <span id="snap-count">0 snapshots</span>
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
-// ── TEMPLATES ──────────────────────────────────────────────────────────
 const TEMPLATES = {
-  blank: {
-    html: `<div class="flex items-center justify-center min-h-screen bg-gray-50">
-  <h1 class="text-4xl font-bold text-gray-800">Olá, mundo!</h1>
-</div>`,
-    css: `/* Seus estilos personalizados aqui */`
-  },
-
-  card: {
-    html: `<div class="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-8">
-  <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-sm w-full">
-    <div class="h-48 bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
-      <span class="text-6xl">🎨</span>
-    </div>
-    <div class="p-6">
-      <span class="text-xs font-semibold text-violet-600 uppercase tracking-wider">Design Tool</span>
-      <h2 class="text-xl font-bold text-gray-900 mt-1 mb-2">CSSLab Editor</h2>
-      <p class="text-gray-500 text-sm leading-relaxed mb-4">
-        Editor de CSS ao vivo com suporte a Tailwind. Construa interfaces incríveis em segundos.
-      </p>
-      <button class="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2.5 rounded-xl transition-colors">
-        Experimentar grátis
-      </button>
-    </div>
-  </div>
-</div>`,
-    css: ``
-  },
-
-  hero: {
-    html: `<div class="min-h-screen bg-black text-white flex flex-col">
-  <nav class="flex items-center justify-between px-8 py-5">
-    <span class="font-bold text-lg">Marca</span>
-    <div class="flex gap-6 text-sm text-gray-400">
-      <a href="#" class="hover:text-white transition-colors">Produto</a>
-      <a href="#" class="hover:text-white transition-colors">Preços</a>
-      <a href="#" class="hover:text-white transition-colors">Docs</a>
-    </div>
-    <button class="bg-white text-black text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-      Começar
-    </button>
-  </nav>
-
-  <main class="flex-1 flex flex-col items-center justify-center text-center px-6">
-    <span class="inline-flex items-center gap-2 border border-gray-800 rounded-full px-4 py-1.5 text-xs text-gray-400 mb-8">
-      ✨ Novo: Tailwind v4 disponível
-    </span>
-    <h1 class="text-5xl md:text-7xl font-bold leading-tight max-w-3xl mb-6">
-      Construa mais<br/>
-      <span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-pink-400">
-        rápido que nunca
-      </span>
-    </h1>
-    <p class="text-gray-400 text-lg max-w-xl mb-10 leading-relaxed">
-      A ferramenta que desenvolvedores usam para prototipar, testar e entregar interfaces perfeitas.
-    </p>
-    <div class="flex gap-3">
-      <button class="bg-white text-black font-semibold px-6 py-3 rounded-xl hover:bg-gray-100 transition-colors">
-        Começar de graça
-      </button>
-      <button class="border border-gray-700 text-white font-semibold px-6 py-3 rounded-xl hover:border-gray-500 transition-colors">
-        Ver demo →
-      </button>
-    </div>
-  </main>
-</div>`,
-    css: ``
-  },
-
-  form: {
-    html: `<div class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-  <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 w-full max-w-md">
-    <h2 class="text-2xl font-bold text-gray-900 mb-1">Criar conta</h2>
-    <p class="text-gray-500 text-sm mb-6">Preencha os dados abaixo para começar</p>
-
-    <div class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nome completo</label>
-        <input type="text" placeholder="Reynaldo Silva"
-          class="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"/>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1.5">E-mail</label>
-        <input type="email" placeholder="reynaldo@email.com"
-          class="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"/>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1.5">Senha</label>
-        <input type="password" placeholder="••••••••"
-          class="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"/>
-      </div>
-      <button class="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2.5 rounded-lg transition-colors mt-2">
-        Criar conta
-      </button>
-    </div>
-
-    <p class="text-center text-sm text-gray-500 mt-4">
-      Já tem conta? <a href="#" class="text-violet-600 font-medium hover:underline">Entrar</a>
-    </p>
-  </div>
-</div>`,
-    css: ``
-  },
-
-  navbar: {
-    html: `<div class="min-h-screen bg-gray-50">
-  <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-8">
-        <span class="font-bold text-gray-900 text-lg">Logo</span>
-        <div class="hidden md:flex items-center gap-1">
-          <a href="#" class="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1.5 rounded-lg">Início</a>
-          <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">Sobre</a>
-          <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">Serviços</a>
-          <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">Contato</a>
-        </div>
-      </div>
-      <div class="flex items-center gap-3">
-        <button class="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Entrar</button>
-        <button class="bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
-          Começar
-        </button>
-      </div>
-    </div>
-  </nav>
-  <div class="flex items-center justify-center h-[calc(100vh-65px)] text-gray-400 text-sm">
-    Conteúdo da página aqui
-  </div>
-</div>`,
-    css: ``
-  },
-
-  grid: {
-    html: `<div class="min-h-screen bg-gray-100 p-8">
-  <div class="max-w-5xl mx-auto">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">Nossos Serviços</h1>
-    <p class="text-gray-500 mb-8">Tudo que você precisa em um só lugar</p>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">
-        <div class="w-11 h-11 bg-violet-100 rounded-xl flex items-center justify-center text-2xl mb-4">🚀</div>
-        <h3 class="font-semibold text-gray-900 mb-2">Performance</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">Otimizado para velocidade máxima com as melhores práticas do mercado.</p>
-      </div>
-      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">
-        <div class="w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center text-2xl mb-4">🔒</div>
-        <h3 class="font-semibold text-gray-900 mb-2">Segurança</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">Proteção de dados e infraestrutura robusta para seu negócio.</p>
-      </div>
-      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">
-        <div class="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center text-2xl mb-4">📊</div>
-        <h3 class="font-semibold text-gray-900 mb-2">Analytics</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">Dados em tempo real para decisões mais inteligentes.</p>
-      </div>
-      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">
-        <div class="w-11 h-11 bg-orange-100 rounded-xl flex items-center justify-center text-2xl mb-4">🎨</div>
-        <h3 class="font-semibold text-gray-900 mb-2">Design</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">Interfaces bonitas e funcionais que encantam os usuários.</p>
-      </div>
-      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">
-        <div class="w-11 h-11 bg-pink-100 rounded-xl flex items-center justify-center text-2xl mb-4">⚡</div>
-        <h3 class="font-semibold text-gray-900 mb-2">Automação</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">Workflows automatizados que economizam horas de trabalho.</p>
-      </div>
-      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">
-        <div class="w-11 h-11 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl mb-4">🤝</div>
-        <h3 class="font-semibold text-gray-900 mb-2">Suporte</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">Time especializado disponível para ajudar quando precisar.</p>
-      </div>
-    </div>
-  </div>
-</div>`,
-    css: ``
-  }
+  blank:{html:`<div class="flex items-center justify-center min-h-screen bg-gray-50">\n  <h1 class="text-4xl font-bold text-gray-800">Olá, mundo!</h1>\n</div>`,css:``},
+  hero:{html:`<div class="min-h-screen bg-black text-white flex flex-col">\n  <nav class="flex items-center justify-between px-8 py-5">\n    <span class="font-bold text-lg">Marca</span>\n    <div class="flex gap-6 text-sm text-gray-400">\n      <a href="#" class="hover:text-white transition-colors">Produto</a>\n      <a href="#" class="hover:text-white transition-colors">Preços</a>\n    </div>\n    <button class="bg-white text-black text-sm font-semibold px-4 py-2 rounded-lg">Começar</button>\n  </nav>\n  <main class="flex-1 flex flex-col items-center justify-center text-center px-6">\n    <h1 class="text-5xl md:text-7xl font-bold leading-tight max-w-3xl mb-6">\n      Construa mais rápido<br/>\n      <span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-pink-400">que nunca</span>\n    </h1>\n    <p class="text-gray-400 text-lg max-w-xl mb-10">A ferramenta que devs usam para prototipar interfaces perfeitas.</p>\n    <div class="flex gap-3">\n      <button class="bg-white text-black font-semibold px-6 py-3 rounded-xl">Começar grátis</button>\n      <button class="border border-gray-700 text-white font-semibold px-6 py-3 rounded-xl">Ver demo →</button>\n    </div>\n  </main>\n</div>`,css:``},
+  card:{html:`<div class="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-8">\n  <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-sm w-full">\n    <div class="h-48 bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">\n      <span class="text-6xl">🎨</span>\n    </div>\n    <div class="p-6">\n      <span class="text-xs font-semibold text-violet-600 uppercase tracking-wider">Design Tool</span>\n      <h2 class="text-xl font-bold text-gray-900 mt-1 mb-2">CSSLab Editor</h2>\n      <p class="text-gray-500 text-sm leading-relaxed mb-4">Editor de CSS ao vivo com suporte a Tailwind.</p>\n      <button class="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2.5 rounded-xl transition-colors">Experimentar</button>\n    </div>\n  </div>\n</div>`,css:``},
+  form:{html:`<div class="min-h-screen bg-gray-50 flex items-center justify-center p-6">\n  <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 w-full max-w-md">\n    <h2 class="text-2xl font-bold text-gray-900 mb-1">Criar conta</h2>\n    <p class="text-gray-500 text-sm mb-6">Preencha os dados abaixo</p>\n    <div class="space-y-4">\n      <div>\n        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nome</label>\n        <input type="text" placeholder="Seu nome" class="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition"/>\n      </div>\n      <div>\n        <label class="block text-sm font-medium text-gray-700 mb-1.5">E-mail</label>\n        <input type="email" placeholder="email@exemplo.com" class="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition"/>\n      </div>\n      <button class="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2.5 rounded-lg transition-colors">Criar conta</button>\n    </div>\n  </div>\n</div>`,css:``},
+  navbar:{html:`<div class="min-h-screen bg-gray-50">\n  <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">\n    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">\n      <span class="font-bold text-gray-900 text-lg">Logo</span>\n      <div class="flex items-center gap-1">\n        <a href="#" class="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1.5 rounded-lg">Início</a>\n        <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">Sobre</a>\n        <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">Contato</a>\n      </div>\n      <button class="bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-lg">Começar</button>\n    </div>\n  </nav>\n  <div class="flex items-center justify-center h-[calc(100vh-65px)] text-gray-400 text-sm">Conteúdo aqui</div>\n</div>`,css:``},
+  grid:{html:`<div class="min-h-screen bg-gray-100 p-8">\n  <div class="max-w-5xl mx-auto">\n    <h1 class="text-3xl font-bold text-gray-900 mb-2">Serviços</h1>\n    <p class="text-gray-500 mb-8">Tudo que você precisa</p>\n    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">\n      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">\n        <div class="w-11 h-11 bg-violet-100 rounded-xl flex items-center justify-center text-2xl mb-4">🚀</div>\n        <h3 class="font-semibold text-gray-900 mb-2">Performance</h3>\n        <p class="text-gray-500 text-sm">Otimizado para velocidade máxima.</p>\n      </div>\n      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">\n        <div class="w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center text-2xl mb-4">🔒</div>\n        <h3 class="font-semibold text-gray-900 mb-2">Segurança</h3>\n        <p class="text-gray-500 text-sm">Infraestrutura robusta para seu negócio.</p>\n      </div>\n      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">\n        <div class="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center text-2xl mb-4">⚡</div>\n        <h3 class="font-semibold text-gray-900 mb-2">Automação</h3>\n        <p class="text-gray-500 text-sm">Workflows que poupam horas de trabalho.</p>\n      </div>\n    </div>\n  </div>\n</div>`,css:``}
 };
 
-// ── STATE ──────────────────────────────────────────────────────────────
-let activeTab = 'html';
-let updateTimer = null;
+let activeTab = 'html', updateTimer = null;
+let snapshots = [];
+let cmHTML, cmCSS;
 
-// ── INIT ──────────────────────────────────────────────────────────────
+try { snapshots = JSON.parse(localStorage.getItem('csslab_snapshots') || '[]'); } catch(e) {}
+
 window.addEventListener('DOMContentLoaded', () => {
-  loadTemplate('hero');
+  cmHTML = CodeMirror.fromTextArea(document.getElementById('editor-html'), {
+    mode: 'htmlmixed', theme: 'material-darker', lineNumbers: true,
+    tabSize: 2, indentWithTabs: false, autoCloseTags: true, lineWrapping: false,
+  });
+  cmCSS = CodeMirror.fromTextArea(document.getElementById('editor-css'), {
+    mode: 'css', theme: 'material-darker', lineNumbers: true,
+    tabSize: 2, indentWithTabs: false, lineWrapping: false,
+  });
+  cmHTML.on('change', scheduleUpdate);
+  cmCSS.on('change', scheduleUpdate);
+
+  if (!loadFromURL()) loadTemplate('hero');
+  renderHistory();
+  updateCharCount();
 });
 
-// ── TABS ──────────────────────────────────────────────────────────────
 function switchTab(tab) {
   activeTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(`tab-${tab}`).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
   document.querySelectorAll('.editor-pane').forEach(p => p.classList.remove('active'));
-  document.getElementById(`pane-${tab}`).classList.add('active');
+  document.getElementById('pane-' + tab).classList.add('active');
+  (tab === 'html' ? cmHTML : cmCSS).refresh();
 }
 
-// ── TEMPLATES ──────────────────────────────────────────────────────────
-function toggleDropdown() {
-  document.getElementById('dropdown').classList.toggle('open');
+function toggleDropdown(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
 }
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.templates-wrap')) {
-    document.getElementById('dropdown').classList.remove('open');
-  }
+document.addEventListener('click', e => {
+  if (!e.target.closest('.dropdown-wrap'))
+    document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
 });
 
 function loadTemplate(name) {
-  const t = TEMPLATES[name];
-  if (!t) return;
-  document.getElementById('editor-html').value = t.html;
-  document.getElementById('editor-css').value = t.css;
-  document.getElementById('dropdown').classList.remove('open');
+  const t = TEMPLATES[name]; if (!t) return;
+  cmHTML.setValue(t.html); cmCSS.setValue(t.css || '');
+  document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('open'));
   updatePreview();
-  setStatus(`Template "${name}" carregado`);
+  toast('Template "' + name + '" carregado');
 }
 
-// ── PREVIEW ──────────────────────────────────────────────────────────
 function scheduleUpdate() {
   clearTimeout(updateTimer);
-  updateTimer = setTimeout(updatePreview, 300);
-  updateCharCount();
+  updateTimer = setTimeout(() => { updatePreview(); updateCharCount(); saveAuto(); }, 350);
 }
 
 function updatePreview() {
-  const html = document.getElementById('editor-html').value;
-  const css = document.getElementById('editor-css').value;
-
-  const doc = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<script src="https://cdn.tailwindcss.com"><\/script>
-<style>${css}</style>
-</head>
-<body>${html}</body>
-</html>`;
-
-  const iframe = document.getElementById('preview');
-  iframe.srcdoc = doc;
+  const html = cmHTML.getValue(), css = cmCSS.getValue();
+  const doc = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><script src="https://cdn.tailwindcss.com"><\/script><style>' + css + '<\/style><\/head><body>' + html + '<\/body><\/html>';
+  document.getElementById('preview').srcdoc = doc;
   setStatus('Preview atualizado');
 }
 
-// ── VIEWPORT ──────────────────────────────────────────────────────────
 function setViewport(mode, btn) {
-  document.querySelectorAll('.vp-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('[id^="vp-"]').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   const wrap = document.getElementById('preview-wrap');
-  wrap.className = 'preview-wrap ' + (mode !== 'desktop' ? mode : '');
+  wrap.className = 'preview-wrap' + (mode !== 'desktop' ? ' ' + mode : '');
 }
 
-// ── COPY ──────────────────────────────────────────────────────────────
-function copyCode(btn) {
-  const code = activeTab === 'html'
-    ? document.getElementById('editor-html').value
-    : document.getElementById('editor-css').value;
-
-  navigator.clipboard.writeText(code).then(() => {
-    btn.classList.add('copied');
-    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>`;
-    setTimeout(() => {
-      btn.classList.remove('copied');
-      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
-    }, 1500);
-    setStatus('Código copiado!');
-  });
+function copyCode() {
+  const code = activeTab === 'html' ? cmHTML.getValue() : cmCSS.getValue();
+  navigator.clipboard.writeText(code).then(() => toast('Código copiado!'));
 }
 
-// ── EXPORT ──────────────────────────────────────────────────────────────
 function exportHTML() {
-  const html = document.getElementById('editor-html').value;
-  const css = document.getElementById('editor-css').value;
-
-  const full = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<script src="https://cdn.tailwindcss.com"><\/script>
-<style>
-${css}
-</style>
-</head>
-<body>
-${html}
-</body>
-</html>`;
-
-  const blob = new Blob([full], { type: 'text/html' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'csslab-export.html';
+  const full = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><script src="https://cdn.tailwindcss.com"><\/script><style>\n' + cmCSS.getValue() + '\n<\/style><\/head><body>\n' + cmHTML.getValue() + '\n<\/body><\/html>';
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([full], {type:'text/html'})), download: 'csslab-export.html' });
   a.click();
-  setStatus('Arquivo exportado!');
+  toast('Arquivo exportado!');
 }
 
-// ── FORMAT ──────────────────────────────────────────────────────────────
-function formatCode() {
-  // Basic indent formatter
-  const ta = activeTab === 'html'
-    ? document.getElementById('editor-html')
-    : document.getElementById('editor-css');
-
-  // Simple: normalize empty lines
-  ta.value = ta.value.replace(/\n{3,}/g, '\n\n').trim();
-  updatePreview();
-  setStatus('Código formatado');
+function shareURL() {
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify({ h: cmHTML.getValue(), c: cmCSS.getValue() }))));
+    const url = location.origin + location.pathname + '?code=' + encoded;
+    if (url.length > 8000) { toast('Código muito grande para compartilhar'); return; }
+    navigator.clipboard.writeText(url).then(() => toast('URL copiada!'));
+  } catch(e) { toast('Erro ao gerar URL'); }
 }
 
-// ── UTILS ──────────────────────────────────────────────────────────────
+function loadFromURL() {
+  try {
+    const code = new URLSearchParams(location.search).get('code');
+    if (!code) return false;
+    const data = JSON.parse(decodeURIComponent(escape(atob(code))));
+    cmHTML.setValue(data.h || ''); cmCSS.setValue(data.c || '');
+    updatePreview(); toast('Código carregado via URL!');
+    return true;
+  } catch(e) { return false; }
+}
+
+function saveSnapshot() {
+  const snap = { id: Date.now(), time: new Date().toLocaleString('pt-BR'), html: cmHTML.getValue(), css: cmCSS.getValue(), preview: cmHTML.getValue().substring(0, 55).replace(/\s+/g,' ').trim() };
+  snapshots.unshift(snap);
+  if (snapshots.length > 20) snapshots = snapshots.slice(0, 20);
+  try { localStorage.setItem('csslab_snapshots', JSON.stringify(snapshots)); } catch(e) {}
+  renderHistory(); toast('Snapshot salvo!');
+}
+
+function restoreSnapshot(id) {
+  const s = snapshots.find(x => x.id === id); if (!s) return;
+  cmHTML.setValue(s.html); cmCSS.setValue(s.css);
+  updatePreview(); toggleHistory(); toast('Versão restaurada!');
+}
+
+function renderHistory() {
+  document.getElementById('snap-count').textContent = snapshots.length + ' snapshots';
+  const list = document.getElementById('history-list');
+  if (!snapshots.length) { list.innerHTML = '<div class="history-empty">Nenhum snapshot ainda.<br/>Clique em 💾 para salvar.</div>'; return; }
+  list.innerHTML = snapshots.map((s,i) => '<div class="history-item' + (i===0?' current':'') + '" onclick="restoreSnapshot(' + s.id + ')"><div class="history-time">' + s.time + (i===0?' · atual':'') + '</div><div class="history-preview">' + (s.preview||'Sem conteúdo') + '...</div></div>').join('');
+}
+
+function toggleHistory() { document.getElementById('history-panel').classList.toggle('open'); }
+
+function saveAuto() {
+  try { localStorage.setItem('csslab_last', JSON.stringify({ h: cmHTML.getValue(), c: cmCSS.getValue() })); } catch(e) {}
+}
+
 function setStatus(msg) {
   document.getElementById('status-text').textContent = msg;
-  setTimeout(() => {
-    document.getElementById('status-text').textContent = 'Pronto';
-  }, 2000);
+  clearTimeout(setStatus._t);
+  setStatus._t = setTimeout(() => { document.getElementById('status-text').textContent = 'Pronto'; }, 2000);
 }
 
 function updateCharCount() {
-  const html = document.getElementById('editor-html').value.length;
-  const css = document.getElementById('editor-css').value.length;
-  document.getElementById('char-count').textContent = `${html + css} chars`;
+  document.getElementById('char-count').textContent = (cmHTML.getValue().length + cmCSS.getValue().length).toLocaleString() + ' chars';
 }
 
-// Tab key support in editors
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Tab' && e.target.tagName === 'TEXTAREA') {
-    e.preventDefault();
-    const ta = e.target;
-    const start = ta.selectionStart;
-    ta.value = ta.value.substring(0, start) + '  ' + ta.value.substring(ta.selectionEnd);
-    ta.selectionStart = ta.selectionEnd = start + 2;
-  }
-});
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
 </script>
 </body>
 </html>
