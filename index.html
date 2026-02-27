@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CSSLab — Editor ao Vivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0c0c0e;
+  --surface: #111114;
+  --surface2: #18181d;
+  --border: #222228;
+  --border2: #2e2e38;
+  --accent: #e8ff47;
+  --accent2: #47d4ff;
+  --text: #f0f0f5;
+  --muted: #666672;
+  --tab-h: 42px;
+  --header-h: 56px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Instrument Sans', sans-serif;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── HEADER ── */
+header {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 1rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Geist Mono', monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.logo-dot {
+  width: 8px; height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.5; transform:scale(0.8); }
+}
+
+.logo span { color: var(--accent); }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Templates dropdown */
+.templates-wrap { position: relative; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.btn-primary:hover { background: #d4e83d; color: #000; border-color: #d4e83d; }
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  min-width: 200px;
+  z-index: 100;
+  overflow: hidden;
+  display: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.dropdown.open { display: block; }
+
+.dropdown-item {
+  display: flex;
+  flex-direction: column;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.1s;
+  border-bottom: 1px solid var(--border);
+}
+.dropdown-item:last-child { border-bottom: none; }
+.dropdown-item:hover { background: var(--surface); }
+.dropdown-item strong { font-size: 0.8rem; font-weight: 600; }
+.dropdown-item small { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+/* ── LAYOUT ── */
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
+
+/* ── PANELS ── */
+.panel {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.panel:last-child { border-right: none; }
+
+.panel-header {
+  height: var(--tab-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  gap: 0.5rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.tab {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.3rem 0.7rem;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+
+.tab.active {
+  color: var(--accent);
+  background: rgba(232,255,71,0.08);
+  border-color: rgba(232,255,71,0.2);
+}
+
+.tab:not(.active):hover { color: var(--text); }
+
+.panel-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.icon-btn {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 5px;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--muted);
+  transition: all 0.15s;
+  font-size: 0.8rem;
+}
+.icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+.icon-btn.copied { color: #4ade80; border-color: #4ade80; }
+
+/* ── EDITORS ── */
+.editor-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.editor-pane {
+  position: absolute; inset: 0;
+  display: none;
+}
+.editor-pane.active { display: flex; flex-direction: column; }
+
+textarea {
+  flex: 1;
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  padding: 1rem 1.25rem;
+  tab-size: 2;
+  caret-color: var(--accent);
+}
+
+textarea::selection { background: rgba(232,255,71,0.15); }
+
+textarea::-webkit-scrollbar { width: 6px; }
+textarea::-webkit-scrollbar-track { background: transparent; }
+textarea::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── PREVIEW ── */
+.preview-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+}
+
+iframe {
+  width: 100%; height: 100%;
+  border: none;
+  background: #fff;
+}
+
+/* Viewport controls */
+.viewport-btns {
+  display: flex;
+  gap: 3px;
+}
+
+.vp-btn {
+  width: 26px; height: 26px;
+  border-radius: 4px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  font-size: 0.75rem;
+}
+.vp-btn.active, .vp-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* preview size modes */
+.preview-wrap.tablet iframe { max-width: 768px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+.preview-wrap.mobile iframe { max-width: 390px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+
+/* ── STATUS BAR ── */
+.statusbar {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.status-left, .status-right { display: flex; align-items: center; gap: 1rem; }
+.status-dot { width: 5px; height: 5px; border-radius: 50%; background: #4ade80; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .workspace { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .panel { border-right: none; border-bottom: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    CSS<span>Lab</span>
+  </div>
+
+  <div class="header-actions">
+    <div class="templates-wrap">
+      <button class="btn" onclick="toggleDropdown()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        Templates
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="dropdown" id="dropdown">
+        <div class="dropdown-item" onclick="loadTemplate('blank')">
+          <strong>Em branco</strong>
+          <small>Começa do zero</small>
+        </div>
+        <div class="dropdown-item" onclick="loadTemplate('card')">
+          <strong>Card de Produto</strong>
+          <small>Card com imagem e botão</small>
+        </div>
+        <div class="dropdown-item" onclick="loadTemplate('hero')">
+          <strong>Hero Section</strong>
+          <small>Seção principal com CTA</small>
+        </div>
+        <div class="dropdown-item" onclick="loadTemplate('form')">
+          <strong>Formulário</strong>
+          <small>Form estilizado com Tailwind</small>
+        </div>
+        <div class="dropdown-item" onclick="loadTemplate('navbar')">
+          <strong>Navbar</strong>
+          <small>Barra de navegação responsiva</small>
+        </div>
+        <div class="dropdown-item" onclick="loadTemplate('grid')">
+          <strong>Grid de Cards</strong>
+          <small>Layout em grid responsivo</small>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="exportHTML()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar
+    </button>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <!-- EDITOR PANEL -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('html')" id="tab-html">HTML</div>
+        <div class="tab" onclick="switchTab('css')" id="tab-css">CSS</div>
+      </div>
+      <div class="panel-actions">
+        <button class="icon-btn" title="Copiar código" onclick="copyCode(this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+        <button class="icon-btn" title="Formatar código" onclick="formatCode()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h14"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="editor-wrap">
+      <div class="editor-pane active" id="pane-html">
+        <textarea id="editor-html" spellcheck="false" placeholder="Digite seu HTML aqui..." oninput="scheduleUpdate()"></textarea>
+      </div>
+      <div class="editor-pane" id="pane-css">
+        <textarea id="editor-css" spellcheck="false" placeholder="Digite seu CSS aqui..." oninput="scheduleUpdate()"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREVIEW PANEL -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="tabs">
+        <div class="tab active">Preview</div>
+      </div>
+      <div class="panel-actions">
+        <div class="viewport-btns">
+          <button class="vp-btn active" title="Desktop" onclick="setViewport('desktop', this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </button>
+          <button class="vp-btn" title="Tablet" onclick="setViewport('tablet', this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          </button>
+          <button class="vp-btn" title="Mobile" onclick="setViewport('mobile', this)">
+            <svg width="11" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          </button>
+        </div>
+        <button class="icon-btn" title="Recarregar" onclick="updatePreview()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="preview-wrap" id="preview-wrap">
+      <iframe id="preview" title="Preview"></iframe>
+    </div>
+  </div>
+</div>
+
+<div class="statusbar">
+  <div class="status-left">
+    <div class="status-dot"></div>
+    <span id="status-text">Pronto</span>
+  </div>
+  <div class="status-right">
+    <span id="char-count">0 chars</span>
+    <span>Tailwind CDN ativo</span>
+  </div>
+</div>
+
+<script>
+// ── TEMPLATES ──────────────────────────────────────────────────────────
+const TEMPLATES = {
+  blank: {
+    html: `<div class="flex items-center justify-center min-h-screen bg-gray-50">
+  <h1 class="text-4xl font-bold text-gray-800">Olá, mundo!</h1>
+</div>`,
+    css: `/* Seus estilos personalizados aqui */`
+  },
+
+  card: {
+    html: `<div class="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-8">
+  <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-sm w-full">
+    <div class="h-48 bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center">
+      <span class="text-6xl">🎨</span>
+    </div>
+    <div class="p-6">
+      <span class="text-xs font-semibold text-violet-600 uppercase tracking-wider">Design Tool</span>
+      <h2 class="text-xl font-bold text-gray-900 mt-1 mb-2">CSSLab Editor</h2>
+      <p class="text-gray-500 text-sm leading-relaxed mb-4">
+        Editor de CSS ao vivo com suporte a Tailwind. Construa interfaces incríveis em segundos.
+      </p>
+      <button class="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2.5 rounded-xl transition-colors">
+        Experimentar grátis
+      </button>
+    </div>
+  </div>
+</div>`,
+    css: ``
+  },
+
+  hero: {
+    html: `<div class="min-h-screen bg-black text-white flex flex-col">
+  <nav class="flex items-center justify-between px-8 py-5">
+    <span class="font-bold text-lg">Marca</span>
+    <div class="flex gap-6 text-sm text-gray-400">
+      <a href="#" class="hover:text-white transition-colors">Produto</a>
+      <a href="#" class="hover:text-white transition-colors">Preços</a>
+      <a href="#" class="hover:text-white transition-colors">Docs</a>
+    </div>
+    <button class="bg-white text-black text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+      Começar
+    </button>
+  </nav>
+
+  <main class="flex-1 flex flex-col items-center justify-center text-center px-6">
+    <span class="inline-flex items-center gap-2 border border-gray-800 rounded-full px-4 py-1.5 text-xs text-gray-400 mb-8">
+      ✨ Novo: Tailwind v4 disponível
+    </span>
+    <h1 class="text-5xl md:text-7xl font-bold leading-tight max-w-3xl mb-6">
+      Construa mais<br/>
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-pink-400">
+        rápido que nunca
+      </span>
+    </h1>
+    <p class="text-gray-400 text-lg max-w-xl mb-10 leading-relaxed">
+      A ferramenta que desenvolvedores usam para prototipar, testar e entregar interfaces perfeitas.
+    </p>
+    <div class="flex gap-3">
+      <button class="bg-white text-black font-semibold px-6 py-3 rounded-xl hover:bg-gray-100 transition-colors">
+        Começar de graça
+      </button>
+      <button class="border border-gray-700 text-white font-semibold px-6 py-3 rounded-xl hover:border-gray-500 transition-colors">
+        Ver demo →
+      </button>
+    </div>
+  </main>
+</div>`,
+    css: ``
+  },
+
+  form: {
+    html: `<div class="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 w-full max-w-md">
+    <h2 class="text-2xl font-bold text-gray-900 mb-1">Criar conta</h2>
+    <p class="text-gray-500 text-sm mb-6">Preencha os dados abaixo para começar</p>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nome completo</label>
+        <input type="text" placeholder="Reynaldo Silva"
+          class="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">E-mail</label>
+        <input type="email" placeholder="reynaldo@email.com"
+          class="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Senha</label>
+        <input type="password" placeholder="••••••••"
+          class="w-full border border-gray-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"/>
+      </div>
+      <button class="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2.5 rounded-lg transition-colors mt-2">
+        Criar conta
+      </button>
+    </div>
+
+    <p class="text-center text-sm text-gray-500 mt-4">
+      Já tem conta? <a href="#" class="text-violet-600 font-medium hover:underline">Entrar</a>
+    </p>
+  </div>
+</div>`,
+    css: ``
+  },
+
+  navbar: {
+    html: `<div class="min-h-screen bg-gray-50">
+  <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-8">
+        <span class="font-bold text-gray-900 text-lg">Logo</span>
+        <div class="hidden md:flex items-center gap-1">
+          <a href="#" class="text-sm font-medium text-gray-900 bg-gray-100 px-3 py-1.5 rounded-lg">Início</a>
+          <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">Sobre</a>
+          <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">Serviços</a>
+          <a href="#" class="text-sm font-medium text-gray-500 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">Contato</a>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Entrar</button>
+        <button class="bg-gray-900 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+          Começar
+        </button>
+      </div>
+    </div>
+  </nav>
+  <div class="flex items-center justify-center h-[calc(100vh-65px)] text-gray-400 text-sm">
+    Conteúdo da página aqui
+  </div>
+</div>`,
+    css: ``
+  },
+
+  grid: {
+    html: `<div class="min-h-screen bg-gray-100 p-8">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Nossos Serviços</h1>
+    <p class="text-gray-500 mb-8">Tudo que você precisa em um só lugar</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">
+        <div class="w-11 h-11 bg-violet-100 rounded-xl flex items-center justify-center text-2xl mb-4">🚀</div>
+        <h3 class="font-semibold text-gray-900 mb-2">Performance</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Otimizado para velocidade máxima com as melhores práticas do mercado.</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">
+        <div class="w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center text-2xl mb-4">🔒</div>
+        <h3 class="font-semibold text-gray-900 mb-2">Segurança</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Proteção de dados e infraestrutura robusta para seu negócio.</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">
+        <div class="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center text-2xl mb-4">📊</div>
+        <h3 class="font-semibold text-gray-900 mb-2">Analytics</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Dados em tempo real para decisões mais inteligentes.</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">
+        <div class="w-11 h-11 bg-orange-100 rounded-xl flex items-center justify-center text-2xl mb-4">🎨</div>
+        <h3 class="font-semibold text-gray-900 mb-2">Design</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Interfaces bonitas e funcionais que encantam os usuários.</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">
+        <div class="w-11 h-11 bg-pink-100 rounded-xl flex items-center justify-center text-2xl mb-4">⚡</div>
+        <h3 class="font-semibold text-gray-900 mb-2">Automação</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Workflows automatizados que economizam horas de trabalho.</p>
+      </div>
+      <div class="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow">
+        <div class="w-11 h-11 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl mb-4">🤝</div>
+        <h3 class="font-semibold text-gray-900 mb-2">Suporte</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Time especializado disponível para ajudar quando precisar.</p>
+      </div>
+    </div>
+  </div>
+</div>`,
+    css: ``
+  }
+};
+
+// ── STATE ──────────────────────────────────────────────────────────────
+let activeTab = 'html';
+let updateTimer = null;
+
+// ── INIT ──────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  loadTemplate('hero');
+});
+
+// ── TABS ──────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  document.querySelectorAll('.editor-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(`pane-${tab}`).classList.add('active');
+}
+
+// ── TEMPLATES ──────────────────────────────────────────────────────────
+function toggleDropdown() {
+  document.getElementById('dropdown').classList.toggle('open');
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.templates-wrap')) {
+    document.getElementById('dropdown').classList.remove('open');
+  }
+});
+
+function loadTemplate(name) {
+  const t = TEMPLATES[name];
+  if (!t) return;
+  document.getElementById('editor-html').value = t.html;
+  document.getElementById('editor-css').value = t.css;
+  document.getElementById('dropdown').classList.remove('open');
+  updatePreview();
+  setStatus(`Template "${name}" carregado`);
+}
+
+// ── PREVIEW ──────────────────────────────────────────────────────────
+function scheduleUpdate() {
+  clearTimeout(updateTimer);
+  updateTimer = setTimeout(updatePreview, 300);
+  updateCharCount();
+}
+
+function updatePreview() {
+  const html = document.getElementById('editor-html').value;
+  const css = document.getElementById('editor-css').value;
+
+  const doc = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script src="https://cdn.tailwindcss.com"><\/script>
+<style>${css}</style>
+</head>
+<body>${html}</body>
+</html>`;
+
+  const iframe = document.getElementById('preview');
+  iframe.srcdoc = doc;
+  setStatus('Preview atualizado');
+}
+
+// ── VIEWPORT ──────────────────────────────────────────────────────────
+function setViewport(mode, btn) {
+  document.querySelectorAll('.vp-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const wrap = document.getElementById('preview-wrap');
+  wrap.className = 'preview-wrap ' + (mode !== 'desktop' ? mode : '');
+}
+
+// ── COPY ──────────────────────────────────────────────────────────────
+function copyCode(btn) {
+  const code = activeTab === 'html'
+    ? document.getElementById('editor-html').value
+    : document.getElementById('editor-css').value;
+
+  navigator.clipboard.writeText(code).then(() => {
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>`;
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+    }, 1500);
+    setStatus('Código copiado!');
+  });
+}
+
+// ── EXPORT ──────────────────────────────────────────────────────────────
+function exportHTML() {
+  const html = document.getElementById('editor-html').value;
+  const css = document.getElementById('editor-css').value;
+
+  const full = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script src="https://cdn.tailwindcss.com"><\/script>
+<style>
+${css}
+</style>
+</head>
+<body>
+${html}
+</body>
+</html>`;
+
+  const blob = new Blob([full], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'csslab-export.html';
+  a.click();
+  setStatus('Arquivo exportado!');
+}
+
+// ── FORMAT ──────────────────────────────────────────────────────────────
+function formatCode() {
+  // Basic indent formatter
+  const ta = activeTab === 'html'
+    ? document.getElementById('editor-html')
+    : document.getElementById('editor-css');
+
+  // Simple: normalize empty lines
+  ta.value = ta.value.replace(/\n{3,}/g, '\n\n').trim();
+  updatePreview();
+  setStatus('Código formatado');
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────────
+function setStatus(msg) {
+  document.getElementById('status-text').textContent = msg;
+  setTimeout(() => {
+    document.getElementById('status-text').textContent = 'Pronto';
+  }, 2000);
+}
+
+function updateCharCount() {
+  const html = document.getElementById('editor-html').value.length;
+  const css = document.getElementById('editor-css').value.length;
+  document.getElementById('char-count').textContent = `${html + css} chars`;
+}
+
+// Tab key support in editors
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Tab' && e.target.tagName === 'TEXTAREA') {
+    e.preventDefault();
+    const ta = e.target;
+    const start = ta.selectionStart;
+    ta.value = ta.value.substring(0, start) + '  ' + ta.value.substring(ta.selectionEnd);
+    ta.selectionStart = ta.selectionEnd = start + 2;
+  }
+});
+</script>
+</body>
+</html>
